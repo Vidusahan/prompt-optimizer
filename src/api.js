@@ -8,7 +8,10 @@
  * Throws on network failure or JSON parse failure — callers must catch.
  */
 export async function callGemini(systemPrompt, userContent) {
-  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+  // const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+  const apiKey = typeof process !== "undefined"
+    ? process.env.VITE_GOOGLE_API_KEY
+    : import.meta.env.VITE_GOOGLE_API_KEY;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
   const res = await fetch(endpoint, {
