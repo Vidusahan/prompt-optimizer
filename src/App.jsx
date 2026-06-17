@@ -2,27 +2,7 @@ import { useState } from 'react';
 import { callGroq } from './api.js';
 import { ANALYSIS_SYSTEM } from './prompts/analysis.js';
 import { IMPROVE_SYSTEM } from './prompts/improve.js';
-
-// ─── Placeholder components (replaced in later branches) ──────────────────────
-function InputModule({ input, setInput, phase, onAnalyze, onReset }) {
-  return (
-    <div style={{ padding: 24, border: '1px dashed var(--border)', borderRadius: 12, marginBottom: 16 }}>
-      <textarea
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        disabled={phase === 'analyzing' || phase === 'improving'}
-        placeholder="Paste your prompt here…"
-        style={{ width: '100%', minHeight: 100, fontFamily: 'var(--mono)', fontSize: 14, boxSizing: 'border-box' }}
-      />
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        {phase !== 'idle' && <button onClick={onReset}>Reset</button>}
-        <button onClick={onAnalyze} disabled={!input.trim() || phase === 'analyzing' || phase === 'improving'}>
-          {phase === 'analyzing' ? 'Analyzing…' : phase === 'improving' ? 'Generating…' : 'Optimize'}
-        </button>
-      </div>
-    </div>
-  );
-}
+import { InputModule } from './components/InputModule.jsx';
 
 function AnalysisPanel({ analysis }) {
   return (
