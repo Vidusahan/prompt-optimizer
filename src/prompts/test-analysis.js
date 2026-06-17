@@ -4,7 +4,9 @@
  * Run from the project root:
  *   node src/prompts/test-analysis.js
  */
-
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 import { callGroq } from "../api.js";
 import { ANALYSIS_SYSTEM } from "./analysis.js";
 
@@ -25,7 +27,7 @@ let passed = 0;
 for (const prompt of BAD_PROMPTS) {
   console.log(`\n─── Testing: "${prompt}" ───`);
   try {
-    const result = await callGemini(
+    const result = await callGroq(
       ANALYSIS_SYSTEM,
       `Analyze this prompt:\n\n${prompt}`
     );

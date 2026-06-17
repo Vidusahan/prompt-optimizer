@@ -8,13 +8,15 @@
  * Throws on network failure or JSON parse failure — callers must catch.
  */
 export async function callGroq(systemPrompt, userContent) {
+  const key = import.meta.env?.VITE_GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? process.env.GROQ_API_KEY;
+  if (!key) console.log("KEY: undefined …");
   const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
 
   const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
