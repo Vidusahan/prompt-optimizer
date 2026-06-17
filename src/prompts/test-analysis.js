@@ -5,7 +5,7 @@
  *   node src/prompts/test-analysis.js
  */
 
-import { callGemini } from "../api.js";
+import { callGroq } from "../api.js";
 import { ANALYSIS_SYSTEM } from "./analysis.js";
 
 const VALID_ISSUE_TYPES = new Set([

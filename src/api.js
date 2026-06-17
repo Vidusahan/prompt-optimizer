@@ -7,33 +7,24 @@
  *
  * Throws on network failure or JSON parse failure — callers must catch.
  */
-export async function callGemini(systemPrompt, userContent) {
-  // const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-  const apiKey = typeof process !== "undefined"
-    ? process.env.VITE_GOOGLE_API_KEY
-    : import.meta.env.VITE_GOOGLE_API_KEY;
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+export async function callGroq(systemPrompt, userContent) {
+  const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
 
   const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: systemPrompt }],
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: userContent }],
-        },
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 1500,
+      response_format: { type: "json_object" }, // forces valid JSON output
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: userContent  },
       ],
-      generationConfig: {
-        response_mime_type: "application/json",
-        temperature: 0.7,
-        maxOutputTokens: 1500,
-      },
     }),
   });
 
@@ -46,10 +37,8 @@ export async function callGemini(systemPrompt, userContent) {
 
   const data = await res.json();
 
-  // Extract text from Gemini's response shape
-  const text =
-    data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") ||
-    "";
+  // Extract text from OpenAI-compatible response shape
+  const text = data?.choices?.[0]?.message?.content || "";
 
   // Strip markdown code fences the model occasionally adds
   const clean = text.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
