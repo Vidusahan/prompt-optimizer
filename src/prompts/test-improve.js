@@ -5,7 +5,7 @@
  *   node src/prompts/test-improve.js
  */
 
-import { callGemini } from "../api.js";
+import { callGroq } from "../api.js";
 import { ANALYSIS_SYSTEM } from "./analysis.js";
 import { IMPROVE_SYSTEM } from "./improve.js";
 
@@ -23,7 +23,7 @@ console.log(`Testing full pipeline with: "${TEST_PROMPT}"\n`);
 console.log("Pass 1: Analyzing...");
 let analysis;
 try {
-  analysis = await callGemini(
+  analysis = await callGroq(
     ANALYSIS_SYSTEM,
     `Analyze this prompt:\n\n${TEST_PROMPT}`
   );
