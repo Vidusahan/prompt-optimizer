@@ -3,6 +3,7 @@ import { callGroq } from './api.js';
 import { ANALYSIS_SYSTEM } from './prompts/analysis.js';
 import { IMPROVE_SYSTEM } from './prompts/improve.js';
 import { InputModule } from './components/InputModule.jsx';
+import { ScoreRing } from './components/ScoreRing.jsx';
 
 function AnalysisPanel({ analysis }) {
   return (
@@ -100,7 +101,15 @@ export default function App() {
         </div>
       )}
 
-      {analysis && <AnalysisPanel analysis={analysis} />}
+      {analysis && (
+        <>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+            <ScoreRing score={analysis.score} />
+            <p style={{ fontSize: 14, color: 'var(--text)' }}>{analysis.summary}</p>
+          </div>
+          <AnalysisPanel analysis={analysis} />
+        </>
+      )}
       {versions  && <VersionsPanel versions={versions} />}
     </div>
   );
