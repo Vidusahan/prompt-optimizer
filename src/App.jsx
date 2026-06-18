@@ -5,24 +5,18 @@ import { IMPROVE_SYSTEM } from './prompts/improve.js';
 import { InputModule } from './components/InputModule.jsx';
 import { ScoreRing } from './components/ScoreRing.jsx';
 import { IssueBadge } from './components/IssueBadge.jsx';
+import { VersionCard } from './components/VersionCard.jsx';
 
 
-function VersionsPanel({ versions }) {
-  return (
-    <pre style={{ background: 'var(--code-bg)', padding: 16, borderRadius: 8, textAlign: 'left', fontSize: 12, overflow: 'auto' }}>
-      {JSON.stringify(versions, null, 2)}
-    </pre>
-  );
-}
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [input,    setInput]    = useState('');
-  const [phase,    setPhase]    = useState('idle');     // idle | analyzing | improving | done | error
+  const [input, setInput] = useState('');
+  const [phase, setPhase] = useState('idle');     // idle | analyzing | improving | done | error
   const [analysis, setAnalysis] = useState(null);
   const [versions, setVersions] = useState(null);
-  const [copied,   setCopied]   = useState(null);       // index of copied version card
-  const [error,    setError]    = useState('');
+  const [copied, setCopied] = useState(null);       // index of copied version card
+  const [error, setError] = useState('');
 
   const handleAnalyze = async () => {
     if (!input.trim()) return;
@@ -89,63 +83,85 @@ export default function App() {
       </p>
 
       {phase === 'error' && (
-        <div style={{ padding: '12px 16px', background: '#FCEBEB', border: '1px solid #F09595',
-          borderRadius: 8, marginBottom: 16, color: '#A32D2D', fontSize: 14 }}>
+        <div style={{
+          padding: '12px 16px', background: '#FCEBEB', border: '1px solid #F09595',
+          borderRadius: 8, marginBottom: 16, color: '#A32D2D', fontSize: 14
+        }}>
           ⚠ {error}
         </div>
       )}
 
-  {analysis && (
-  <div style={{
-    background: 'var(--bg)',
-    border: '1px solid var(--border)',
-    borderRadius: 12,
-    padding: '18px 20px',
-    marginBottom: 16,
-  }}>
-    {/* Score + summary row */}
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
-      <ScoreRing score={analysis.score} />
-      <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 4px', fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
-          Prompt quality score
-        </p>
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text)', lineHeight: 1.5 }}>
-          {analysis.summary}
-        </p>
-        {/* Strengths chips */}
-        {analysis.strengths?.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {analysis.strengths.map((s, i) => (
-              <span key={i} style={{
-                fontSize: 12, padding: '3px 10px', borderRadius: 20,
-                background: '#E1F5EE', color: '#0F6E56', border: '1px solid #5DCAA5',
-              }}>
-                ✓ {s}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Issues list */}
-    {analysis.issues?.length > 0 && (
-      <>
-        <p style={{
-          margin: '0 0 10px', fontSize: 12, fontWeight: 500,
-          color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em',
+      {analysis && (
+        <div style={{
+          background: 'var(--bg)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          padding: '18px 20px',
+          marginBottom: 16,
         }}>
-          Issues detected
-        </p>
-        {analysis.issues.map((issue, i) => (
-          <IssueBadge key={i} issue={issue} />
-        ))}
-      </>
-    )}
-  </div>
-)}
-      {versions  && <VersionsPanel versions={versions} />}
+          {/* Score + summary row */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
+            <ScoreRing score={analysis.score} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 4px', fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
+                Prompt quality score
+              </p>
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text)', lineHeight: 1.5 }}>
+                {analysis.summary}
+              </p>
+              {/* Strengths chips */}
+              {analysis.strengths?.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                  {analysis.strengths.map((s, i) => (
+                    <span key={i} style={{
+                      fontSize: 12, padding: '3px 10px', borderRadius: 20,
+                      background: '#E1F5EE', color: '#0F6E56', border: '1px solid #5DCAA5',
+                    }}>
+                      ✓ {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Issues list */}
+          {analysis.issues?.length > 0 && (
+            <>
+              <p style={{
+                margin: '0 0 10px', fontSize: 12, fontWeight: 500,
+                color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em',
+              }}>
+                Issues detected
+              </p>
+              {analysis.issues.map((issue, i) => (
+                <IssueBadge key={i} issue={issue} />
+              ))}
+            </>
+          )}
+        </div>
+      )}
+      {versions && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '20px 0 14px' }}>
+            <p style={{ margin: 0, fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
+              ✦ 3 improved versions
+            </p>
+          </div>
+          {versions.map((v, i) => (
+            <VersionCard
+              key={i}
+              version={v}
+              idx={i}
+              onCopy={handleCopy}
+              copied={copied}
+            />
+          ))}
+          <p style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', marginTop: 8 }}>
+            Each version uses a different prompt engineering strategy — pick the one that fits your use case.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
