@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from "react";
 import { callGroq } from './api.js';
 import { ANALYSIS_SYSTEM } from './prompts/analysis.js';
 import { IMPROVE_SYSTEM } from './prompts/improve.js';
@@ -6,6 +6,8 @@ import { InputModule } from './components/InputModule.jsx';
 import { ScoreRing } from './components/ScoreRing.jsx';
 import { IssueBadge } from './components/IssueBadge.jsx';
 import { VersionCard } from './components/VersionCard.jsx';
+import { HistoryPanel } from './components/HistoryPanel.jsx';
+import { storage, HISTORY_KEY_PREFIX, MAX_HISTORY } from './storage.js';
 
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -17,6 +19,20 @@ export default function App() {
   const [versions, setVersions] = useState(null);
   const [copied, setCopied] = useState(null);       // index of copied version card
   const [error, setError] = useState('');
+  const [history, setHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadHistory = async () => {
+    const keys = await storage.list(HISTORY_KEY_PREFIX);
+    const entries = await Promise.all(keys.map(k => storage.get(k)));
+    const valid = entries
+      .filter(Boolean)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, MAX_HISTORY);
+    setHistory(valid);
+  };
+
+  useEffect(() => { loadHistory(); }, []);
 
   const handleAnalyze = async () => {
     if (!input.trim()) return;
@@ -39,6 +55,24 @@ export default function App() {
         IMPROVE_SYSTEM,
         `Original prompt:\n${input.trim()}\n\nAnalysis:\n${JSON.stringify(a)}\n\nGenerate 3 improved versions.`
       );
+
+      const entry = {
+        key: `${HISTORY_KEY_PREFIX}${Date.now()}`,
+        timestamp: Date.now(),
+        input: input.trim(),
+        analysis: a,
+        versions: v.versions,
+      };
+      await storage.set(entry.key, entry);
+
+      const existingKeys = await storage.list(HISTORY_KEY_PREFIX);
+      if (existingKeys.length > MAX_HISTORY) {
+        const all = await Promise.all(existingKeys.map(k => storage.get(k)));
+        const sorted = all.filter(Boolean).sort((a, b) => a.timestamp - b.timestamp);
+        await storage.delete(sorted[0].key);
+      }
+      setHistory(prev => [entry, ...prev].slice(0, MAX_HISTORY));
+
       setVersions(v.versions);
       setPhase('done');
 
@@ -62,12 +96,27 @@ export default function App() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const handleSelectHistory = (entry) => {
+    setInput(entry.input);
+    setAnalysis(entry.analysis);
+    setVersions(entry.versions);
+    setPhase('done');
+    setShowHistory(false);
+  };
+
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '2rem 1rem', textAlign: 'left' }}>
       <h1 style={{ fontSize: 24, marginBottom: 8 }}>Prompt Optimizer</h1>
       <p style={{ color: 'var(--text)', marginBottom: 24, fontSize: 14 }}>
         Paste any prompt and get a diagnosis plus 3 improved versions.
       </p>
+
+      <HistoryPanel
+        history={history}
+        showHistory={showHistory}
+        setShowHistory={setShowHistory}
+        onSelect={handleSelectHistory}
+      />
 
       <InputModule
         input={input}
