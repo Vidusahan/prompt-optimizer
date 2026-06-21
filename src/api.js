@@ -1,12 +1,3 @@
-/**
- * callGemini — the only function in the app that makes network requests.
- *
- * Takes a system prompt and user content, calls Gemini 2.0 Flash,
- * strips any ```json fences the model occasionally wraps responses in,
- * and returns a parsed JS object.
- *
- * Throws on network failure or JSON parse failure — callers must catch.
- */
 export async function callGroq(systemPrompt, userContent) {
   const key = import.meta.env?.VITE_GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? process.env.GROQ_API_KEY;
   if (!key) console.log("KEY: undefined …");
