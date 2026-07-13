@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { IconSettings } from '@tabler/icons-react';
 import { callGroq } from './api.js';
 import { ANALYSIS_SYSTEM } from './prompts/analysis.js';
 import { IMPROVE_SYSTEM } from './prompts/improve.js';
@@ -7,6 +8,7 @@ import { ScoreRing } from './components/ScoreRing.jsx';
 import { IssueBadge } from './components/IssueBadge.jsx';
 import { VersionCard } from './components/VersionCard.jsx';
 import { HistoryPanel } from './components/HistoryPanel.jsx';
+import { ApiKeyModal } from './components/ApiKeyModal.jsx';
 import { storage, HISTORY_KEY_PREFIX, MAX_HISTORY } from './storage.js';
 
 
@@ -21,6 +23,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const loadHistory = async () => {
     const keys = await storage.list(HISTORY_KEY_PREFIX);
@@ -106,111 +109,143 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '2rem 1rem', textAlign: 'left' }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>Prompt Optimizer</h1>
-      <p style={{ color: 'var(--text)', marginBottom: 24, fontSize: 14 }}>
-        Paste any prompt and get a diagnosis plus 3 improved versions.
-      </p>
 
-      <HistoryPanel
-        history={history}
-        showHistory={showHistory}
-        setShowHistory={setShowHistory}
-        onSelect={handleSelectHistory}
-      />
-
-      <InputModule
-        input={input}
-        setInput={setInput}
-        phase={phase}
-        onAnalyze={handleAnalyze}
-        onReset={handleReset}
-      />
-
-      {/* Phase indicator — dev only, will be removed later */}
-      <p style={{ fontSize: 12, color: 'var(--text)', marginBottom: 16 }}>
-        Phase: <strong>{phase}</strong>
-      </p>
-
-      {phase === 'error' && (
-        <div style={{
-          padding: '12px 16px', background: '#FCEBEB', border: '1px solid #F09595',
-          borderRadius: 8, marginBottom: 16, color: '#A32D2D', fontSize: 14
-        }}>
-          ⚠ {error}
-        </div>
-      )}
-
-      {analysis && (
-        <div style={{
-          background: 'var(--bg)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          padding: '18px 20px',
-          marginBottom: 16,
-        }}>
-          {/* Score + summary row */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
-            <ScoreRing score={analysis.score} />
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: '0 0 4px', fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
-                Prompt quality score
-              </p>
-              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text)', lineHeight: 1.5 }}>
-                {analysis.summary}
-              </p>
-              {/* Strengths chips */}
-              {analysis.strengths?.length > 0 && (
-                <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                  {analysis.strengths.map((s, i) => (
-                    <span key={i} style={{
-                      fontSize: 12, padding: '3px 10px', borderRadius: 20,
-                      background: '#E1F5EE', color: '#0F6E56', border: '1px solid #5DCAA5',
-                    }}>
-                      ✓ {s}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Issues list */}
-          {analysis.issues?.length > 0 && (
-            <>
-              <p style={{
-                margin: '0 0 10px', fontSize: 12, fontWeight: 500,
-                color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em',
-              }}>
-                Issues detected
-              </p>
-              {analysis.issues.map((issue, i) => (
-                <IssueBadge key={i} issue={issue} />
-              ))}
-            </>
-          )}
-        </div>
-      )}
-      {versions && (
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '20px 0 14px' }}>
-            <p style={{ margin: 0, fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
-              ✦ 3 improved versions
-            </p>
-          </div>
-          {versions.map((v, i) => (
-            <VersionCard
-              key={i}
-              version={v}
-              idx={i}
-              onCopy={handleCopy}
-              copied={copied}
-            />
-          ))}
-          <p style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', marginTop: 8 }}>
-            Each version uses a different prompt engineering strategy — pick the one that fits your use case.
+          <h1 style={{ fontSize: 24, marginBottom: 4, marginTop: 0 }}>Prompt Optimizer</h1>
+          <p style={{ color: 'var(--text)', margin: 0, fontSize: 14 }}>
+            Paste any prompt and get a diagnosis plus 3 improved versions.
           </p>
         </div>
+
+        {/* Settings / API key button */}
+        <button
+          id="open-api-key-settings"
+          onClick={() => setShowApiKeyModal(true)}
+          title="API Key Settings"
+          style={{
+            flexShrink: 0,
+            marginTop: 2,
+            background: 'transparent',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            cursor: 'pointer',
+            padding: '7px 10px',
+            color: 'var(--text)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 13,
+          }}
+        >
+          <IconSettings size={15} />
+          API Key
+        </button>
+      </div>
+
+      {showApiKeyModal && (
+        <ApiKeyModal onClose={() => setShowApiKeyModal(false)} />
       )}
+
+      <div style={{ marginTop: 24 }}>
+        <HistoryPanel
+          history={history}
+          showHistory={showHistory}
+          setShowHistory={setShowHistory}
+          onSelect={handleSelectHistory}
+        />
+
+        <InputModule
+          input={input}
+          setInput={setInput}
+          phase={phase}
+          onAnalyze={handleAnalyze}
+          onReset={handleReset}
+        />
+
+        {phase === 'error' && (
+          <div style={{
+            padding: '12px 16px', background: '#FCEBEB', border: '1px solid #F09595',
+            borderRadius: 8, marginBottom: 16, color: '#A32D2D', fontSize: 14
+          }}>
+            ⚠ {error}
+          </div>
+        )}
+
+        {analysis && (
+          <div style={{
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            padding: '18px 20px',
+            marginBottom: 16,
+          }}>
+            {/* Score + summary row */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
+              <ScoreRing score={analysis.score} />
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 4px', fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
+                  Prompt quality score
+                </p>
+                <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text)', lineHeight: 1.5 }}>
+                  {analysis.summary}
+                </p>
+                {/* Strengths chips */}
+                {analysis.strengths?.length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                    {analysis.strengths.map((s, i) => (
+                      <span key={i} style={{
+                        fontSize: 12, padding: '3px 10px', borderRadius: 20,
+                        background: '#E1F5EE', color: '#0F6E56', border: '1px solid #5DCAA5',
+                      }}>
+                        ✓ {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Issues list */}
+            {analysis.issues?.length > 0 && (
+              <>
+                <p style={{
+                  margin: '0 0 10px', fontSize: 12, fontWeight: 500,
+                  color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em',
+                }}>
+                  Issues detected
+                </p>
+                {analysis.issues.map((issue, i) => (
+                  <IssueBadge key={i} issue={issue} />
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
+        {versions && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '20px 0 14px' }}>
+              <p style={{ margin: 0, fontWeight: 500, fontSize: 15, color: 'var(--text-h)' }}>
+                ✦ 3 improved versions
+              </p>
+            </div>
+            {versions.map((v, i) => (
+              <VersionCard
+                key={i}
+                version={v}
+                idx={i}
+                onCopy={handleCopy}
+                copied={copied}
+              />
+            ))}
+            <p style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', marginTop: 8 }}>
+              Each version uses a different prompt engineering strategy — pick the one that fits your use case.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
