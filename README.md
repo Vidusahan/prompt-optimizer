@@ -2,6 +2,8 @@
 
 A meta-AI tool that teaches prompt engineering by doing it live. Paste any weak or vague prompt — the app diagnoses what's wrong and generates three improved versions using different engineering strategies.
 
+**[🚀 Live Demo →](https://prompt-optimizer-delta.vercel.app)**
+
 ## Architecture
 
 ```
@@ -14,7 +16,7 @@ User Input
                  │ user prompt text
                  ▼
 ┌─────────────────────────────────┐
-│        API Layer — callGroq()   │  ← single reusable fetch wrapper
+│        API Layer — callGroq()   │  ← hybrid endpoint resolver (see API Key section)
 └────────────────┬────────────────┘
         ┌────────┴────────┐
         ▼                 ▼
@@ -39,6 +41,20 @@ User Input
 
 The two AI calls are **sequential by design**: the improvement call receives the full analysis JSON as context, so improvements are targeted rather than generic rewrites. On a successful run, the result is also persisted to history.
 
+## API Key — How It Works
+
+The app uses a **hybrid key resolution strategy** in this priority order:
+
+| Priority | Source | Who uses it |
+|---|---|---|
+| 1 | **BYOK** — key you enter via the ⚙️ API Key button in the app | Anyone cloning/forking this repo |
+| 2 | **`.env.local`** — `VITE_GROQ_API_KEY` injected by Vite | Local development |
+| 3 | **Vercel Proxy** — `/api/groq` serverless function using server-side `GROQ_API_KEY` | Live public deployment |
+
+If you're using the **live demo**, no key is needed — it's handled server-side.
+
+If you're **self-hosting or running locally**, you need your own [Groq API key](https://console.groq.com/keys).
+
 ## Running locally (Vite dev harness)
 
 ```bash
@@ -51,6 +67,8 @@ Then open `http://localhost:5173` in your browser.
 
 Local dev uses a real network call to Groq with your key injected via Vite env vars (`VITE_GROQ_API_KEY`), loaded client-side from `.env.local`. This file is git-ignored and should never be committed.
 
+Alternatively, you can skip `.env.local` and enter your key directly in the app via the **⚙️ API Key** button — it will be stored in your browser's `localStorage`.
+
 To test the API layer and prompts in isolation before touching the UI:
 
 ```bash
@@ -60,22 +78,21 @@ node src/prompts/test-improve.js    # validates the full 2-pass pipeline
 
 History in local dev falls back to `localStorage` automatically (see **Storage** below), so you can test the history panel without the artifact runtime.
 
-## Running as a Claude.ai artifact
+## Self-Hosting on Vercel (with your own key)
 
-Paste the final `App.jsx` (and its module files, inlined or bundled as required by the artifact format) into a Claude.ai artifact. In that environment:
-
-- `window.storage` is available and used automatically for history — no setup needed.
-- No `.env` file or API key management is required for the *artifact's own* Claude calls — but **this project calls the Groq API**, which is a third-party endpoint outside Anthropic's artifact credential injection. See the security note below before relying on this in the artifact runtime.
+1. Fork this repository.
+2. Import the fork into [Vercel](https://vercel.com).
+3. In the Vercel project settings → **Environment Variables**, add:
+   - `GROQ_API_KEY` = your Groq API key
+4. Deploy. The `/api/groq` serverless function will proxy all Groq calls using your server-side key — it is never exposed to the browser.
 
 ## ⚠️ Security note — read before deploying anywhere
 
-This app calls the **Groq API directly from the browser**, with the API key embedded in client-side code (`import.meta.env.VITE_GROQ_API_KEY`).
+This app calls the **Groq API via a serverless proxy** in production, with the API key stored as a Vercel environment variable (server-side only).
 
 - **Local dev:** safe. The key lives only in your local `.env.local`, never committed, never sent anywhere except directly to Groq from your own machine.
-- **Claude.ai artifact runtime:** the credential-injection safety net that applies to direct Anthropic API calls **does not apply to Groq**. If you paste a Groq key into an artifact, that key is visible in the artifact's source and network requests to anyone who can view or run it. Treat this as equivalent to a public deployment — do not put a real production key in an artifact meant to be shared.
-- **Public deployment (Vercel, Netlify, GitHub Pages, etc.):** **do not deploy this pattern as-is.** Any client-side bundled API key is extractable from the shipped JS, regardless of build tooling. Before deploying publicly, add a minimal backend proxy (e.g., a serverless function) that holds the Groq key server-side and forwards requests, so the key never reaches the browser.
-
-In short: this direct-from-browser pattern is only safe for local development with a key you control and are willing to rotate.
+- **BYOK (browser localStorage):** your key is stored only in your own browser and is never sent to this project's servers. It is sent directly to Groq from your browser.
+- **Public deployment (Vercel):** the proxy pattern keeps the key server-side. The shipped JS bundle contains no secrets.
 
 ## Tech stack
 
@@ -83,19 +100,21 @@ In short: this direct-from-browser pattern is only safe for local development wi
 - **Groq API** (`llama-3.3-70b-versatile`, OpenAI-compatible chat completions endpoint)
 - `window.storage` (Claude.ai artifact runtime) with automatic `localStorage` fallback for local dev
 - Tabler Icons (CDN, no install needed)
-- No backend, no database, no build-time secrets baked into production bundles
+- Vercel Serverless Functions (proxy for public deployment)
 
 ## Module overview
 
 | Module | File | Role |
 |---|---|---|
-| API layer | `src/api.js` | Single fetch wrapper to Groq, JSON fence stripping, network/HTTP/parse error handling |
+| API layer | `src/api.js` | Hybrid endpoint resolver — BYOK, env, or Vercel proxy |
+| Serverless proxy | `api/groq.js` | Vercel function, keeps GROQ_API_KEY server-side |
 | Analysis prompt | `src/prompts/analysis.js` | Strict schema prompt for diagnosis pass |
 | Improve prompt | `src/prompts/improve.js` | Strict schema prompt for 3-strategy improvement pass |
 | ScoreRing | `src/components/ScoreRing.jsx` | SVG animated progress ring, color-coded by score |
 | IssueBadge | `src/components/IssueBadge.jsx` | Color-coded, icon-tagged issue display, falls back to vagueness styling for unknown issue types |
 | VersionCard | `src/components/VersionCard.jsx` | Full prompt card with copy button + change list |
 | HistoryPanel | `src/components/HistoryPanel.jsx` | Collapsible list of past analyses, click to restore instantly (no API call) |
+| ApiKeyModal | `src/components/ApiKeyModal.jsx` | Settings modal for BYOK — saves key to localStorage |
 | Storage | `src/storage.js` | `get/set/list/delete` wrapper — uses `window.storage` in the artifact runtime, `localStorage` otherwise |
 | Orchestration | `src/App.jsx` | Two-pass pipeline, phase state machine, history persistence |
 | Input module | `src/components/InputModule.jsx` | Textarea, example prompts, action bar |
@@ -112,6 +131,7 @@ In short: this direct-from-browser pattern is only safe for local development wi
 | `error` | string | Error message if an API call fails |
 | `history` | array | Up to 10 most recent saved analyses, newest first |
 | `showHistory` | boolean | Whether the history panel is expanded |
+| `showApiKeyModal` | boolean | Whether the BYOK settings modal is open |
 
 ## Error handling
 
@@ -133,3 +153,4 @@ Every successful analysis is saved under a `history:{timestamp}` key with the or
 - `v0.1-core-logic-validated` — API layer + both prompts validated against real responses
 - `v0.5-ui-complete` — Full UI wired end-to-end, all 4 examples working
 - `v1.0` — Edge cases handled, history feature added, visual polish done, migrated from Anthropic API to Groq API
+- `v1.1` — Hybrid API key strategy (BYOK + Vercel proxy), deployed to Vercel, open-source README
