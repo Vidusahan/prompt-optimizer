@@ -78,7 +78,7 @@ node src/prompts/test-improve.js    # validates the full 2-pass pipeline
 
 History in local dev falls back to `localStorage` automatically (see **Storage** below), so you can test the history panel without the artifact runtime.
 
-## Self-Hosting on Vercel (with your own key)
+<!-- ## Self-Hosting on Vercel (with your own key)
 
 1. Fork this repository.
 2. Import the fork into [Vercel](https://vercel.com).
@@ -92,7 +92,7 @@ This app calls the **Groq API via a serverless proxy** in production, with the A
 
 - **Local dev:** safe. The key lives only in your local `.env.local`, never committed, never sent anywhere except directly to Groq from your own machine.
 - **BYOK (browser localStorage):** your key is stored only in your own browser and is never sent to this project's servers. It is sent directly to Groq from your browser.
-- **Public deployment (Vercel):** the proxy pattern keeps the key server-side. The shipped JS bundle contains no secrets.
+- **Public deployment (Vercel):** the proxy pattern keeps the key server-side. The shipped JS bundle contains no secrets. -->
 
 ## Tech stack
 
@@ -102,7 +102,7 @@ This app calls the **Groq API via a serverless proxy** in production, with the A
 - Tabler Icons (CDN, no install needed)
 - Vercel Serverless Functions (proxy for public deployment)
 
-## Module overview
+<!-- ## Module overview
 
 | Module | File | Role |
 |---|---|---|
@@ -131,9 +131,9 @@ This app calls the **Groq API via a serverless proxy** in production, with the A
 | `error` | string | Error message if an API call fails |
 | `history` | array | Up to 10 most recent saved analyses, newest first |
 | `showHistory` | boolean | Whether the history panel is expanded |
-| `showApiKeyModal` | boolean | Whether the BYOK settings modal is open |
+| `showApiKeyModal` | boolean | Whether the BYOK settings modal is open | -->
 
-## Error handling
+<!-- ## Error handling
 
 `callGroq()` distinguishes four failure modes and surfaces a specific message for each:
 
@@ -153,4 +153,4 @@ Every successful analysis is saved under a `history:{timestamp}` key with the or
 - `v0.1-core-logic-validated` — API layer + both prompts validated against real responses
 - `v0.5-ui-complete` — Full UI wired end-to-end, all 4 examples working
 - `v1.0` — Edge cases handled, history feature added, visual polish done, migrated from Anthropic API to Groq API
-- `v1.1` — Hybrid API key strategy (BYOK + Vercel proxy), deployed to Vercel, open-source README
+- `v1.1` — Hybrid API key strategy (BYOK + Vercel proxy), deployed to Vercel, open-source README -->
