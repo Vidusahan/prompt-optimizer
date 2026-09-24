@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { IconSettings } from '@tabler/icons-react';
+import { useState, useEffect } from "react";
 import { callGroq } from './api.js';
 import { ANALYSIS_SYSTEM } from './prompts/analysis.js';
 import { IMPROVE_SYSTEM } from './prompts/improve.js';
@@ -8,7 +7,6 @@ import { ScoreRing } from './components/ScoreRing.jsx';
 import { IssueBadge } from './components/IssueBadge.jsx';
 import { VersionCard } from './components/VersionCard.jsx';
 import { HistoryPanel } from './components/HistoryPanel.jsx';
-import { ApiKeyModal } from './components/ApiKeyModal.jsx';
 import { storage, HISTORY_KEY_PREFIX, MAX_HISTORY } from './storage.js';
 
 
@@ -23,7 +21,6 @@ export default function App() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const loadHistory = async () => {
     const keys = await storage.list(HISTORY_KEY_PREFIX);
@@ -110,45 +107,15 @@ export default function App() {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '2rem 1rem', textAlign: 'left' }}>
 
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div>
-          <h1 style={{ fontSize: 24, marginBottom: 4, marginTop: 0 }}>Prompt Optimizer</h1>
-          <p style={{ color: 'var(--text)', margin: 0, fontSize: 14 }}>
-            Paste any prompt and get a diagnosis plus 3 improved versions.
-          </p>
-        </div>
-
-        {/* Settings / API key button */}
-        <button
-          id="open-api-key-settings"
-          onClick={() => setShowApiKeyModal(true)}
-          title="API Key Settings"
-          style={{
-            flexShrink: 0,
-            marginTop: 2,
-            background: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            cursor: 'pointer',
-            padding: '7px 10px',
-            color: 'var(--text)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-          }}
-        >
-          <IconSettings size={15} />
-          API Key
-        </button>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 24, marginBottom: 4, marginTop: 0 }}>Prompt Optimizer</h1>
+        <p style={{ color: 'var(--text)', margin: 0, fontSize: 14 }}>
+          Paste any prompt and get a diagnosis plus 3 improved versions.
+        </p>
       </div>
 
-      {showApiKeyModal && (
-        <ApiKeyModal onClose={() => setShowApiKeyModal(false)} />
-      )}
-
-      <div style={{ marginTop: 24 }}>
+      <div>
         <HistoryPanel
           history={history}
           showHistory={showHistory}
