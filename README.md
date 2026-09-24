@@ -2,7 +2,7 @@
 
 A meta-AI tool that teaches prompt engineering by doing it live. Paste any weak or vague prompt — the app diagnoses what's wrong and generates three improved versions using different engineering strategies.
 
-**[🚀 Try it live →](https://prompt-optimizer-delta.vercel.app)**
+<!-- **[🚀 Try it live →](https://prompt-optimizer-delta.vercel.app)** -->
 
 ---
 
@@ -50,12 +50,3 @@ The two AI calls are **sequential by design**: the improvement call receives the
 The app calls a Vercel serverless function (`/api/groq`) which proxies requests to Groq. The API key lives server-side only — it is never shipped in the browser bundle.
 
 ---
-
-## Error handling
-
-The API layer distinguishes four failure modes, each surfaced with a clear message and a one-click Reset path:
-
-1. **Network failure** — fetch throws (offline, DNS, etc.)
-2. **Non-2xx HTTP** — rate limit, auth, or server error from Groq
-3. **Empty output** — model returns no content
-4. **Malformed JSON** — model output fails to parse
