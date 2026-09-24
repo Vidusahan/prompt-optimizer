@@ -2,7 +2,7 @@
 
 A meta-AI tool that teaches prompt engineering by doing it live. Paste any weak or vague prompt — the app diagnoses what's wrong and generates three improved versions using different engineering strategies.
 
-<!-- **[🚀 Try it live →](https://prompt-optimizer-delta.vercel.app)** -->
+**[🚀 Try it live →](https://aiprompt-optimizer.vercel.app/)**
 
 ---
 
